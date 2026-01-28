@@ -1,3 +1,4 @@
+# Метод Зейделя
 import time
 
 def seidel_method(A, b, max_iter=15, tol=1e-8):
