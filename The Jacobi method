@@ -1,0 +1,122 @@
+# Метод Якоби
+import time
+import numpy as np
+
+
+if __name__ == "__main__":
+    matrix = np.array([[177.2, 1.05, -8.97, 0.75, 0.45],
+                    [4.26, 185.8, 0.13, -8.86, 0.25],
+                    [-3.81, 5.23, -189, -4.88, 7.14],
+                    [5.82, 3.87, -2.47, 81.4, 4.68]])
+
+# Ввод точности e
+e = 0.001
+
+start_time = time.time()  # Записываем начальное время
+
+try:
+
+    # Разделение матрицы на коэффициенты A и столбец b
+    A = [row[:4] for row in matrix]
+    b = [row[4] for row in matrix]
+
+    # Проверка наличия нулевых диагональных элементов
+    for i in range(4):
+        if A[i][i] == 0:
+            print(f"Ошибка: диагональный элемент A[{i+1}][{i+1}] равен нулю")
+            exit()
+
+    # Построение матрицы B и вектора c
+    B = []
+    c = []
+
+    for i in range(4):
+        a_ii = A[i][i]
+        c_i = b[i] / a_ii
+        c.append(c_i)
+        B_row = []
+        for j in range(4):
+            B_row.append(-A[i][j] / a_ii if j != i else 0.0)
+        B.append(B_row)
+
+    # Функция для вычисления inf-нормы матрицы
+    def inf_norm(mat):
+        max_row_sum = 0.0
+        for row in mat:
+            row_sum = sum(abs(x) for x in row)
+            max_row_sum = max(max_row_sum, row_sum)
+        return max_row_sum
+
+    norm_B = inf_norm(B)
+    sufficient_condition = norm_B < 1
+
+    # Вычисление e1 в зависимости от условия сходимости
+    if sufficient_condition:
+        e1 = ( (1 - norm_B) / norm_B ) * e
+    else:
+        e1 = e
+
+    # Вывод матрицы B и вектора c
+    print("\nМатрица B:")
+    for row in B:
+        print([f"{x:.4f}" for x in row])
+    print("\nСтолбец c:")
+    print([f"{x:.4f}" for x in c])
+
+    print(f"\nНорма матрицы B (inf): {norm_B:.4f}")
+    print(f"Достаточное условие сходимости (норма B < 1): {sufficient_condition}")
+    print(f"Вычисленное e1: {e1:.6f}")
+
+    # Инициализация начального приближения
+    x_old = c.copy()
+    iter_count = 0
+    max_iterations = 1000
+    tolerance = e1 if sufficient_condition else e
+
+    print("\nНачальное приближение x0:", [f"{x:.4f}" for x in x_old])
+
+    # Итерационный процесс
+    while iter_count < max_iterations:
+        x_new = [0.0] * 4
+        for i in range(4):
+            sum_bx = sum(B[i][j] * x_old[j] for j in range(4))
+            x_new[i] = sum_bx + c[i]
+
+        iter_count += 1
+        # Вывод деталей итерации
+        print(f"\nИтерация {iter_count}:")
+        print("x_old:", [f"{val:.6f}" for val in x_old])
+        print("x_new:", [f"{val:.6f}" for val in x_new])
+
+        # Расчет разницы между итерациями
+        diff = [abs(x_new[i] - x_old[i]) for i in range(4)]
+        max_diff = max(diff)
+        print("Разности по компонентам:", [f"{d:.6f}" for d in diff])
+        print(f"Максимальная разница: {max_diff:.6f}")
+
+        # Проверка условия останова
+        if max_diff < tolerance:
+            print(f"Условие остановки достигнуто: {max_diff:.6f} < {tolerance:.6f}")
+            break
+
+        x_old = x_new.copy()
+    else:
+        print(f"Достигнуто максимальное число итераций {max_iterations}")
+
+    # Вывод результатов
+    print("\nРезультат:")
+    print(f"Количество итераций: {iter_count}")
+    print("Приближенное решение x:", [f"{x:.6f}" for x in x_new])
+
+    # Проверка достаточного условия сходимости
+    print("\nПроверка достаточного условия сходимости:")
+    print(f"inf-норма матрицы B: {norm_B:.6f}")
+    if sufficient_condition:
+        print("Достаточное условие сходимости выполнено (норма B < 1)")
+    else:
+        print("Достаточное условие сходимости не выполнено (норма B >= 1)")
+
+finally:
+    end_time = time.time()  # Записываем конечное время
+    # Выводим общее время выполнения
+    print(f"\nВремя выполнения программы: {end_time - start_time:.6f} секунд")
