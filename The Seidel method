@@ -1,0 +1,124 @@
+import time
+
+def seidel_method(A, b, max_iter=15, tol=1e-8):
+    n = len(A)
+    x = [0.0] * n  # Начальное приближение
+    x_prev = [0.0] * n
+
+    # Формируем матрицы B1 (нижняя треугольная), B2 (верхняя треугольная) и C
+    B1 = [[0.0 for _ in range(n)] for _ in range(n)]
+    B2 = [[0.0 for _ in range(n)] for _ in range(n)]
+    C = [0.0] * n
+
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                if j < i:  # Нижняя треугольная часть
+                    B1[i][j] = -A[i][j] / A[i][i]
+                else:      # Верхняя треугольная часть
+                    B2[i][j] = -A[i][j] / A[i][i]
+        C[i] = b[i] / A[i][i]
+
+    print("\nМатрица B1 (нижняя треугольная):")
+    for row in B1:
+        print(row)
+    print("\nМатрица B2 (верхняя треугольная):")
+    for row in B2:
+        print(row)
+    print("\nВектор C:")
+    print(C)
+
+    # Проверяем достаточные условия сходимости
+    # Для метода Зейделя проверяем спектральный радиус матрицы (B1+B2)
+    B = [[B1[i][j] + B2[i][j] for j in range(n)] for i in range(n)]
+
+    # Вычисляем 1-норму (максимальная сумма по столбцам)
+    norm1_B = max(sum(abs(B[i][j]) for i in range(n) for j in range(n)))
+
+    # Вычисляем inf-норму (максимальная сумма по строкам)
+    norm_inf_B = max(sum(abs(B[i][j]) for j in range(n) for i in range(n)))
+
+    print(f"\n1-норма матрицы (B1+B2): {norm1_B}")
+    print(f"inf-норма матрицы (B1+B2): {norm_inf_B}")
+
+    if norm1_B < 1 or norm_inf_B < 1:
+        print("Достаточное условие сходимости выполнено (хотя бы одна из норм < 1)")
+    else:
+        print("Внимание: ни одна из норм матрицы (B1+B2) не меньше 1. Сходимость не гарантирована.")
+
+    # Итерационный процесс
+    iterations = 0
+    for k in range(max_iter):
+        x_prev = x.copy()
+
+        for i in range(n):
+            s1 = sum(A[i][j] * x[j] for j in range(i))     # Используем уже обновленные значения
+            s2 = sum(A[i][j] * x_prev[j] for j in range(i+1, n))  # Используем старые значения
+            x[i] = (b[i] - s1 - s2) / A[i][i]
+
+        # Вывод промежуточных результатов после каждой итерации
+        print(f"\nИтерация {k+1}:")
+        print(f"x = {x}")
+
+        # Вычисляем максимальное изменение (inf-норма разности векторов)
+        max_change = max(abs(x[i] - x_prev[i]) for i in range(n))
+        print(f"Изменение: {max_change}")
+
+        # Проверка условия остановки
+        if max_change < tol:
+            break
+
+        iterations += 1
+
+    return x, iterations
+
+def calculate_errors(A, b, x):
+    # Вычисляем невязку
+    residual = [sum(A[i][j] * x[j] for j in range(len(A))) - b[i] for i in range(len(A))]
+
+    # Абсолютные погрешности
+    abs_error_1 = sum(abs(r) for r in residual)
+    abs_error_inf = max(abs(r) for r in residual)
+
+    # Относительные погрешности
+    b_norm_1 = sum(abs(b_i) for b_i in b)
+    b_norm_inf = max(abs(b_i) for b_i in b)
+
+    rel_error_1 = abs_error_1 / b_norm_1 if b_norm_1 != 0 else float('inf')
+    rel_error_inf = abs_error_inf / b_norm_inf if b_norm_inf != 0 else float('inf')
+
+    return (abs_error_1, abs_error_inf), (rel_error_1, rel_error_inf)
+
+A = [
+    [177.2000, 1.0500, -8.9700, 0.7500],
+    [-4.2600, 185.8000, 0.1300, -8.8600],
+    [-3.8100, 5.2300, -189.0000, -4.8800],
+    [5.8200, 3.8700, -2.4700, 81.4000]
+]
+
+b = [455.3400, -924.0400, -1554.4600, 59.7500]
+
+print("\nИсходная матрица A:")
+for row in A:
+    print(row)
+print("\nВектор b:")
+print(b)
+
+start_time = time.time()
+x, iterations = seidel_method(A, b)
+end_time = time.time()
+
+print(f"\nРешение найдено за {iterations} итераций:")
+print(x)
+
+(abs_err_1, abs_err_inf), (rel_err_1, rel_err_inf) = calculate_errors(A, b, x)
+
+print("\nАбсолютная погрешность:")
+print(f"По 1-норме: {abs_err_1}")
+print(f"По inf-норме: {abs_err_inf}")
+
+print("\nОтносительная погрешность:")
+print(f"По 1-норме: {rel_err_1}")
+print(f"По inf-норме: {rel_err_inf}")
+
+print(f"\nВремя выполнения: {end_time - start_time:.6f} секунд")
