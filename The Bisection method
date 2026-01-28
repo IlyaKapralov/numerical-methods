@@ -1,0 +1,58 @@
+# Метод Бисекции
+import time
+
+def cubic_equation(x):
+    return 2*x**3 - 4*x**2 - 2*x + 1
+
+def bisection_method(a, b, epsilon=1e-5, max_iter=100):
+    start_time = time.time()
+
+    fa = cubic_equation(a)
+    fb = cubic_equation(b)
+
+    if fa * fb >= 0:
+        print("На отрезке [a, b] нет корня или несколько корней")
+        return None, [], 0
+
+    print("\nМетод бисекции для уравнения 2x³ - 4x² - 2x + 1 = 0")
+    print(f"Исходный отрезок: [{a:.6f}, {b:.6f}]")
+    print("\nИтерационный процесс:")
+    print("-" * 85)
+    print(f"{'Итерация':<8} | {'a':<15} | {'b':<15} | {'c':<15} | {'|b-a|':<15} | f(c)")
+    print("-" * 85)
+
+    iterations = []
+
+    for i in range(max_iter):
+        c = (a + b) / 2
+        fc = cubic_equation(c)
+        interval_length = abs(b - a)
+
+        iterations.append((i, a, b, c, fc, interval_length))
+
+        # Вывод информации о текущей итерации
+        print(f"{i:<8} | {a:<15.6f} | {b:<15.6f} | {c:<15.6f} | {interval_length:<15.6f} | {fc:.6f}")
+
+        if interval_length < epsilon:
+            break
+
+        if fa * fc < 0:
+            b = c
+            fb = fc
+        else:
+            a = c
+            fa = fc
+
+    execution_time = time.time() - start_time
+
+    print("-" * 85)
+    print(f"\nРезультат:")
+    print(f"Найденный корень: x = {c:.6f}")
+    print(f"Значение функции: f(c) = {fc:.6f}")
+    print(f"Количество итераций: {len(iterations)}")
+    print(f"Конечная длина интервала: {interval_length:.6f}")
+    print(f"Время выполнения: {execution_time:.6f} сек.")
+
+    return c, iterations, execution_time
+
+root, _, _ = bisection_method(a=0.0, b=2/3, epsilon=1e-5)
