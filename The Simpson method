@@ -1,0 +1,77 @@
+# Симпсон
+import math
+import time
+
+def f(x):
+    if x == 0:
+        return 0
+    # Вычисление R2
+    numerator_r2 = -x**2 + x + 5
+    r2 = math.asin(1/numerator_r2)
+
+    # Вычисление R1
+    numerator_r1 = 4 * x**3 + 2 * x**2 - 4 * x + 2
+    S = math.sqrt(2)
+    r1 = numerator_r1 ** S
+
+    return r1 + r2 - 5.0
+
+def compute_integral(a, b, fa, fb, n, prev_sum4=None, prev_sum2=None):
+    if n % 2 != 0:
+        n += 1
+
+    h = (b - a) / n
+
+    if prev_sum4 is None:
+        sum4 = 0.0
+        sum2 = 0.0
+        for i in range(1, n):
+            x = a + i * h
+            if i % 2 == 1:
+                sum4 += f(x)
+            else:
+                sum2 += f(x)
+        integral = (h / 3) * (fa + 4*sum4 + 2*sum2 + fb)
+        return integral, 4*sum4, 2*sum2
+    else:
+        new_sum4 = 0.0
+        for i in range(n//2):
+            x_mid = a + (2*i + 1)*h
+            new_sum4 += f(x_mid)
+
+        sum4 = 4 * new_sum4
+        sum2 = prev_sum4/2 + prev_sum2
+        integral = (h / 3) * (fa + sum4 + sum2 + fb)
+        return integral, sum4, sum2
+
+def calc():
+    a, b = -1.0, 1.0
+    fa = f(a)
+    fb = f(b)
+    epsilon = 0.001
+    k = 4
+    factor = 2**k - 1
+
+    start_time = time.time()
+    n = 10
+
+    I_prev, sum4, sum2 = compute_integral(a, b, fa, fb, n)
+
+    n *= 2
+    I_current, sum4_current, sum2_current = compute_integral(a, b, fa, fb, n, sum4, sum2)
+    R = abs(I_current - I_prev) / factor
+
+    while R >= epsilon:
+        n *= 2
+        I_prev, sum4, sum2 = I_current, sum4_current, sum2_current
+        I_current, sum4_current, sum2_current = compute_integral(a, b, fa, fb, n, sum4, sum2)
+        R = abs(I_current - I_prev) / factor
+
+
+    print(f"Приближенное значение интеграла: {I_current + (I_current-I_prev)/(2**k - 1):.6f}")
+    print(f"Шаг интегрирования: {(b-a)/n:.6f}")
+    print(f"Число разбиений: {n}")
+    print(f"Время работы: {time.time()-start_time:.6f} сек")
+
+if __name__ == "__main__":
+    calc()
