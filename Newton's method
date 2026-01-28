@@ -1,0 +1,66 @@
+# Метод Ньютона
+import time
+
+def cubic_equation(x, a, b, c, d):
+    return a * x**3 + b * x**2 + c * x + d
+
+def cubic_derivative(x, a, b, c):
+    return 3 * a * x**2 + 2 * b * x + c
+
+def cubic_second_derivative(x, a, b):
+    return 6 * a * x + 2 * b
+
+def newton_method(a, b, c, d, epsilon=1e-5, max_iter=100):
+    start_time = time.time()
+
+    # Выбор начальной точки с учетом выпуклости
+    x0 = 2/3
+
+    print(f"\nМетод Ньютона для уравнения: {a}x³ + {b}x² + {c}x + {d} = 0")
+    print(f"Начальная точка x0 = {x0:.6f} (выбрана с учетом отрицательности f(x) и f''(x))")
+    print("\nИтерационный процесс:")
+    print("-" * 80)
+    print(f"{'Итерация':<8} | {'x[n]':<15} | {'f(x[n])':<15} | {'f\'(x[n])':<15} | {'Delta x[n]':<15}")
+    print("-" * 80)
+
+    iterations = []
+    for i in range(max_iter):
+        f_x = cubic_equation(x0, a, b, c, d)
+        f_prime_x = cubic_derivative(x0, a, b, c)
+
+        if abs(f_prime_x) < epsilon:
+            print("Производная слишком мала, возможно деление на ноль.")
+            break
+
+        delta_x = f_x / f_prime_x
+        x1 = x0 - delta_x
+        iterations.append((i, x0, f_x, f_prime_x, delta_x, abs(f_x)))
+
+        print(f"{i:<8} | {x0:<15.6f} | {f_x:<15.6f} | {f_prime_x:<15.6f} | {delta_x:<15.6f}")
+
+        if abs(delta_x) < epsilon:
+            break
+
+        x0 = x1
+
+    end_time = time.time()
+    execution_time = end_time - start_time
+
+    print("-" * 80)
+    print(f"\nРезультат:")
+    print(f"Найденный корень: x = {x0:.6f}")
+    print(f"Значение ошибки: f(x) = {cubic_equation(x0, a, b, c, d):.12f}")
+    print(f"Количество итераций: {len(iterations)}")
+    print(f"Время: {execution_time:.6f} секунд")
+
+    return x0, iterations, execution_time
+
+print("Решение кубического уравнения методом Ньютона")
+a = 2
+b = -4
+c = -2
+d = 1
+print ("Кубическое уравнение: ",a,"x³ + ",b,"x² + ",c,"x + ",d," = 0")
+epsilon = 1e-5
+
+root, iterations, exec_time = newton_method(a, b, c, d, epsilon)
