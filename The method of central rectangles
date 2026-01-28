@@ -1,0 +1,52 @@
+# Метод центральных прямоугольников
+import math
+import time
+
+start = time.perf_counter()
+def f(x):
+    # Вычисление R2
+    numerator_r2 =  -x**2 + x + 5
+    r2 = math.asin(1/numerator_r2)
+
+    # Вычисление R1
+    numerator_r1 = 4 * x**3 + 2 * x**2 - 4 * x + 2
+    S = math.sqrt(2)
+    r1 = numerator_r1 ** S
+
+    return r1 + r2 - 5.0
+
+def integrate(a, b, n):
+    h = (b - a) / n
+    total = 0.0
+    for i in range(n):
+        x_mid = a + (i + 0.5) * h  # Центр прямоугольника
+        total += f(x_mid)
+    return total * h
+
+def calc():
+    a = -1.0
+    b = 1.0
+    eps = 0.001
+    k = 2
+    fctr = (2**k-1)
+
+    n = 10
+
+    I_prev = integrate(a, b, n)
+    n *= 2
+    I_cur = integrate(a, b, n)
+    R = abs(I_cur - I_prev) / fctr  # Оценка погрешности по правилу Рунге
+    while R >= eps:
+        n *= 2
+        I_prev = I_cur
+        I_cur = integrate(a, b, n)
+        R = abs(I_cur - I_prev) / fctr
+
+    end = time.perf_counter()
+    elapsed = end - start
+    print(f"Приближенное значение интеграла: {I_cur + (I_cur-I_prev)/(2**k - 1):.6f}")
+    print(f"Шаг интегрирования: {(b - a)/n:.6f}")
+    print(f"Число разбиений: {n}")
+    print(f"Время работы программы: {elapsed:.9f} секунд")
+
+calc()
